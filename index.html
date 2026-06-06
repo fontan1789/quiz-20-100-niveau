@@ -118,12 +118,18 @@ body{font-family:Arial,sans-serif;background:linear-gradient(180deg,#f6f9fc 0%, 
     <span><span class="dot j"></span>Niveau 2</span>
     <span><span class="dot r"></span>Niveau 3</span>
   </div>
-  <div class="main" id="main">
+  
+<div style="text-align:center;margin:10px 0">
+<button onclick="setLevel('v')">Niveau 1</button>
+<button onclick="setLevel('j')">Niveau 2</button>
+<button onclick="setLevel('r')">Niveau 3</button>
+</div>
+<div class="main" id="main">
     <div class="toolbar">
       <div class="left">
         <button class="nb pr" id="newSeriesTop">🎲 Nouvelle série</button>
       </div>
-      <div class="nc" id="sessionInfo">Session aléatoire de 20 questions</div>
+      <div class="nc" id="sessionInfo">Session de 10 questions par niveau (mode coach)</div>
     </div>
     <div class="cn" id="cn"></div>
     <div class="jn" id="jn"></div>
@@ -236,12 +242,12 @@ var ALL=[
 {"id":100,"diff":"j","chapter":"Ench\u00e8res comp\u00e9titives","hand":{"spades":"AV9843","hearts":"RD2","diamonds":"V3","clubs":"R5","hcp":14,"hld":16},"question":"Partenaire a ouvert 1\u2660. Vous avez fait 4SA RKCB. Partenaire r\u00e9pond 5\u2666. Que signifie cette r\u00e9ponse en SEF 2024 ?","sequence":"1\u2660 \u2013 Passe \u2013 4SA \u2013 Passe \u2013 5\u2666","options":["A) 1 ou 4 Key Cards","B) 0 ou 3 Key Cards","C) 2 Key Cards sans la Dame d'atout","D) 2 Key Cards avec la Dame d'atout"],"correct":"B","comment":"Dans le RKCB 1430 du SEF 2024, la r\u00e9ponse de 5\u2666 montre 0 ou 3 Key Cards."}
 ];
 var DIFF_LBL={"v":"Niveau 1","j":"Niveau 2","r":"Niveau 3"};
-var D=[];
+var D=[]; var CURRENT_LEVEL=null; var SCORE_LEVEL1=0;
 var L=["A","B","C","D"];
 var cur=0;
 var ans={};
 var timedOut={};
-var NB=20;
+var NB=10;
 var timerHandle=null;
 var timeLeft=60;
 function ge(id){return document.getElementById(id);}
@@ -274,7 +280,11 @@ function shuffle(arr){
   }
   return a;
 }
-function pickQuestions(){ return shuffle(ALL).slice(0, Math.min(NB, ALL.length)); }
+function pickQuestions(){
+  var base = ALL;
+  if(CURRENT_LEVEL){ base = ALL.filter(q => q.diff === CURRENT_LEVEL); }
+  return shuffle(base).slice(0, Math.min(NB, base.length));
+}
 function chapSt(){
   var s={};
   for(var i=0;i<D.length;i++){
@@ -446,7 +456,7 @@ function renderQ(){
 function showRes(){
   stopTimer();
   var st=getSt();
-  var pct=Math.round(st.c/D.length*100);
+  var pct=Math.round(st.c/D.length*100); if(CURRENT_LEVEL==='v'){ SCORE_LEVEL1=pct; }
   var men=pct>=85?'Excellent — Maître SEF 2024 !':pct>=70?'Très bien joué !':pct>=55?'Bien — quelques révisions s’imposent.':pct>=40?'Moyen — révisez les bases SEF.':'À retravailler — relisez le SEF 2024.';
   var cs=chapSt(), chs=getChs(), cards='';
   for(var i=0;i<chs.length;i++){
@@ -493,6 +503,20 @@ function startSession(){
   renderQ();
 }
 ge('newSeriesTop').addEventListener('click', startSession);
+
+function setLevel(level){
+  if(level==='j' && SCORE_LEVEL1 < 60){
+    alert('Terminez niveau 1 avec au moins 60%');
+    return;
+  }
+  if(level==='r' && SCORE_LEVEL1 < 80){
+    alert('Terminez niveau 2 avant accès niveau 3');
+    return;
+  }
+  CURRENT_LEVEL = level;
+  startSession();
+}
+
 startSession();
 </script>
 </body>
