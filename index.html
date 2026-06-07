@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>QCM SEF 2024 — Portable Premium 10 questions chrono</title>
+<title>QCM SEF 2024 — Portable Premium 20 questions chrono</title>
 <meta name="theme-color" content="#1b3a6b" />
 <style>
 :root {
@@ -97,12 +97,15 @@ body{font-family:Arial,sans-serif;background:linear-gradient(180deg,#f6f9fc 0%, 
 .footerNote{text-align:center;color:var(--muted);font-size:.82rem;margin-top:14px}
 @media (max-width:760px){.topstats{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:700px){.hand{grid-template-columns:repeat(2,1fr)} .rg{grid-template-columns:1fr}}
+
+button.activeLevel{background:#1b3a6b;color:white;border-radius:8px;}
+.levelBox{margin:10px;text-align:center;font-size:14px;font-weight:bold;}
 </style>
 </head>
 <body>
 <header class="hdr">
   <h1>QCM SEF 2024 — Version portable premium</h1>
-  <p>10 questions aléatoires parmi 100 • chrono 1 minute par question • inchangé</p>
+  <p>20 questions aléatoires parmi 100 • chrono 1 minute par question • contenu inchangé</p>
   <div class="pb"><div class="pf" id="prog" style="width:0%"></div></div>
 </header>
 <div class="page">
@@ -119,17 +122,19 @@ body{font-family:Arial,sans-serif;background:linear-gradient(180deg,#f6f9fc 0%, 
     <span><span class="dot r"></span>Niveau 3</span>
   </div>
   
+<div class="levelBox">Choisissez un niveau (mode coach)</div>
 <div style="text-align:center;margin:10px 0">
-<button onclick="setLevel('v')">Niveau 1</button>
-<button onclick="setLevel('j')">Niveau 2</button>
-<button onclick="setLevel('r')">Niveau 3</button>
+<button id="btnV" onclick="setLevel('v')">Niveau 1</button>
+<button id="btnJ" onclick="setLevel('j')">Niveau 2</button>
+<button id="btnR" onclick="setLevel('r')">Niveau 3</button>
 </div>
+<div class="levelBox" id="scoreGlobal">Progression : N1 0% | N2 0%</div>
 <div class="main" id="main">
     <div class="toolbar">
       <div class="left">
         <button class="nb pr" id="newSeriesTop">🎲 Nouvelle série</button>
       </div>
-      <div class="nc" id="sessionInfo">Session de 10 questions par niveau (mode coach)</div>
+      <div class="nc" id="sessionInfo">Session aléatoire de 20 questions</div>
     </div>
     <div class="cn" id="cn"></div>
     <div class="jn" id="jn"></div>
@@ -242,7 +247,7 @@ var ALL=[
 {"id":100,"diff":"j","chapter":"Ench\u00e8res comp\u00e9titives","hand":{"spades":"AV9843","hearts":"RD2","diamonds":"V3","clubs":"R5","hcp":14,"hld":16},"question":"Partenaire a ouvert 1\u2660. Vous avez fait 4SA RKCB. Partenaire r\u00e9pond 5\u2666. Que signifie cette r\u00e9ponse en SEF 2024 ?","sequence":"1\u2660 \u2013 Passe \u2013 4SA \u2013 Passe \u2013 5\u2666","options":["A) 1 ou 4 Key Cards","B) 0 ou 3 Key Cards","C) 2 Key Cards sans la Dame d'atout","D) 2 Key Cards avec la Dame d'atout"],"correct":"B","comment":"Dans le RKCB 1430 du SEF 2024, la r\u00e9ponse de 5\u2666 montre 0 ou 3 Key Cards."}
 ];
 var DIFF_LBL={"v":"Niveau 1","j":"Niveau 2","r":"Niveau 3"};
-var D=[]; var CURRENT_LEVEL=null; var SCORE_LEVEL1=0;
+var D=[]; var CURRENT_LEVEL=null; var SCORE_L1=0; var SCORE_L2=0;
 var L=["A","B","C","D"];
 var cur=0;
 var ans={};
@@ -281,9 +286,9 @@ function shuffle(arr){
   return a;
 }
 function pickQuestions(){
-  var base = ALL;
-  if(CURRENT_LEVEL){ base = ALL.filter(q => q.diff === CURRENT_LEVEL); }
-  return shuffle(base).slice(0, Math.min(NB, base.length));
+ var base=ALL;
+ if(CURRENT_LEVEL){ base=ALL.filter(q=>q.diff===CURRENT_LEVEL); }
+ return shuffle(base).slice(0, Math.min(NB, base.length));
 }
 function chapSt(){
   var s={};
@@ -456,7 +461,7 @@ function renderQ(){
 function showRes(){
   stopTimer();
   var st=getSt();
-  var pct=Math.round(st.c/D.length*100); if(CURRENT_LEVEL==='v'){ SCORE_LEVEL1=pct; }
+  var pct=Math.round(st.c/D.length*100); if(CURRENT_LEVEL==='v'){SCORE_L1=pct;} if(CURRENT_LEVEL==='j'){SCORE_L2=pct;} updateButtons();
   var men=pct>=85?'Excellent — Maître SEF 2024 !':pct>=70?'Très bien joué !':pct>=55?'Bien — quelques révisions s’imposent.':pct>=40?'Moyen — révisez les bases SEF.':'À retravailler — relisez le SEF 2024.';
   var cs=chapSt(), chs=getChs(), cards='';
   for(var i=0;i<chs.length;i++){
@@ -503,18 +508,23 @@ function startSession(){
   renderQ();
 }
 ge('newSeriesTop').addEventListener('click', startSession);
+ALL = ALL.filter(q => q.id !== 53);
 
+function updateButtons(){
+ document.getElementById('btnV').classList.remove('activeLevel');
+ document.getElementById('btnJ').classList.remove('activeLevel');
+ document.getElementById('btnR').classList.remove('activeLevel');
+ if(CURRENT_LEVEL==='v'){btnV.classList.add('activeLevel');}
+ if(CURRENT_LEVEL==='j'){btnJ.classList.add('activeLevel');}
+ if(CURRENT_LEVEL==='r'){btnR.classList.add('activeLevel');}
+ document.getElementById('scoreGlobal').innerText='Progression : N1 '+SCORE_L1+'% | N2 '+SCORE_L2+'%';
+}
 function setLevel(level){
-  if(level==='j' && SCORE_LEVEL1 < 60){
-    alert('Terminez niveau 1 avec au moins 60%');
-    return;
-  }
-  if(level==='r' && SCORE_LEVEL1 < 80){
-    alert('Terminez niveau 2 avant accès niveau 3');
-    return;
-  }
-  CURRENT_LEVEL = level;
-  startSession();
+ if(level==='j' && SCORE_L1<60){alert('🔒 60% au niveau 1 requis');return;}
+ if(level==='r' && SCORE_L2<60){alert('🔒 60% au niveau 2 requis');return;}
+ CURRENT_LEVEL=level;
+ updateButtons();
+ startSession();
 }
 
 startSession();
